@@ -3,3 +3,4 @@ results
 figures
 datasets
 __pycache__
+.DS_Store
