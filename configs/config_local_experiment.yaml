@@ -14,7 +14,6 @@ exp_kwargs:
   num_trials: 10
   grid_size: 3
   fn_list: [linsvr2]
-  suffix: _trial_grid_size_${exp_kwargs.grid_size}
   file_name: local_experiment_toy_data_P_${manifold_kwargs.P}_N_${manifold_kwargs.N}_lamb_${exp_kwargs.lamb}_trials_${exp_kwargs.num_trials}_grid_size_${exp_kwargs.grid_size}_seed_${manifold_kwargs.centroid_seed}.npz
 
 experiment_name: ${now:%Y-%m-%d_%H-%M-%S}

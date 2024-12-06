@@ -10,88 +10,6 @@ import jax.numpy as jnp
 jax.config.update("jax_enable_x64", True)
 
 
-class GaussianToyManifold:
-    """
-    Gaussian Manifold model with:
-    - ψbar ~ N(0, I/N)
-    - δ ~ N(0, I/N)
-    - ψ ~ sqrt(1-c) ψbar + sqrt(c) δ
-    """
-
-    def __init__(self, P, N, corr=0, num_classes=1, m_tr=1, centroid_seed=125, **kwargs):
-
-        key = jax.random.PRNGKey(centroid_seed)
-        key_psi, key_delta, key_wbar = jax.random.split(key, 3)
-
-        self.P = P
-        self.N = N
-        self.C = num_classes
-        self.c = corr
-        self.m_tr = m_tr
-
-        # Target
-        self.wbar = jax.random.normal(key_wbar, shape=(N, 1))
-        self.wbar /= jnp.sqrt(jnp.trace(self.wbar.T@self.wbar) / N)
-        assert jnp.allclose(jnp.trace(self.wbar.T@self.wbar), N)
-
-        self.Σ_ψbar = jnp.eye(self.N) / N
-        self.Σ_δ = jnp.eye(self.N) / N
-
-        # Centroid
-        self.ψbar = jax.random.multivariate_normal(key_psi, jnp.zeros(N), self.Σ_ψbar, shape=(P,))
-
-        # Noise
-        self.δ = jax.random.multivariate_normal(key_delta, jnp.zeros(N), self.Σ_δ, shape=(P,))
-
-        # Signal
-        self.ψ = jnp.sqrt(1-self.c) * self.ψbar + jnp.sqrt(self.c) * self.δ
-
-    def get_data_statistics(self):
-
-        Σ_ψbar = self.Σ_ψbar
-        Σ_δ = self.Σ_δ
-        Σ_ψ = (1-self.c) * Σ_ψbar + self.c * Σ_δ
-        Σ_ψ_ψbar = jnp.sqrt(1-self.c) * Σ_ψbar
-
-        return (Σ_ψ, Σ_ψbar, Σ_ψ_ψbar, self.wbar)
-
-    def get_manifold(self, p_tr, m_tr=1, manifold_seed=0):
-
-        # Centroid and noise
-        ψbar = self.ψbar
-        δ = self.δ
-
-        # Signal and target
-        ψ = jnp.sqrt(1-self.c)*ψbar + jnp.sqrt(self.c)*δ
-        wbar = self.wbar
-
-        X = ψ
-        y = jnp.einsum('ik,kl->il', ψbar, wbar)
-
-        np.random.seed(manifold_seed)
-        idx_centroid = np.random.choice(range(self.P), size=p_tr, replace=False)
-
-        X_tr = X[idx_centroid].reshape(-1, self.N)
-        y_tr = y[idx_centroid].reshape(-1, self.C)
-
-        X_test = X.reshape(-1, self.N)
-        y_test = y.reshape(-1, self.C)
-
-        assert len(X_tr) == p_tr*m_tr
-
-        return (X_tr, y_tr, X_test, y_test)
-
-    # def update_corr(self, corr, **kwargs):
-    #     self.c = corr
-    #     self.ψ = jnp.sqrt(1-self.c)*self.ψbar + jnp.sqrt(self.c)*self.δ
-
-    def update_corr(self, **kwargs):
-
-        if kwargs.get('corr'):
-            self.c = kwargs.get('corr')
-            self.ψ = jnp.sqrt(1-self.c)*self.ψbar + jnp.sqrt(self.c)*self.δ
-
-
 class GaussianToyManifoldStructered:
     """
     Gaussian Manifold model with:
@@ -629,6 +547,8 @@ class GratingImages:
             manifold = self.generate_augmented_grating_images(angles)
             manifold = np.array(manifold).swapaxes(0, 1)
             dataset = {'angles': angles, 'manifold': manifold}
+
+            os.makedirs(os.path.dirname(ds_path), exist_ok=True)
             pickle.dump(dataset, open(ds_path, 'wb'), protocol=4)
 
         print(manifold.shape)
