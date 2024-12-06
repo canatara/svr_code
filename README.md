@@ -1,1 +1,1 @@
-Code for reproducing figures in ``Statistical Mechanics of Support Vector Regression''
+Code for reproducing figures in "Statistical Mechanics of Support Vector Regression"
