@@ -407,7 +407,6 @@ def run_experiment(fns, cfg, override=False, SVR_th=SVR_th, SVR_exp=SVR_exp, Man
 
     lamb = exp_kwargs.lamb
     num_trials = exp_kwargs.num_trials
-    # exp_name = exp_kwargs.experiment_name
 
     alpha_list = np.arange(0.1, 3, 0.1)
     alpha_list_th = np.linspace(alpha_list[0], alpha_list[-1], 101)

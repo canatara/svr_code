@@ -510,6 +510,8 @@ class StickImages:
                 manifold.append(self.generate_augmented_stick_images(angle))
             manifold = np.array(manifold)
             dataset = {'angles': angles, 'manifold': manifold}
+
+            os.makedirs(os.path.dirname(ds_path), exist_ok=True)
             pickle.dump(dataset, open(ds_path, 'wb'), protocol=4)
 
         np.random.seed(random_seed)
