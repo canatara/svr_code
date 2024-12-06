@@ -1,3 +1,5 @@
+# Code adopted from https://github.com/pytorch/examples/tree/main/mnist
+
 
 import torch
 import torch.nn as nn
@@ -7,9 +9,6 @@ from torch.optim.lr_scheduler import StepLR
 from torchvision import datasets, transforms
 
 import numpy as np
-
-
-# Code adopted from https://github.com/pytorch/examples/tree/main/mnist
 
 
 class Net(nn.Module):
