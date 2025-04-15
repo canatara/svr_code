@@ -287,6 +287,14 @@ def linear_problem(fun, manifold, p_tr, num_trials=1, **kwargs):
 
     return returns
 
+def SVR_th(alpha, epsilon=0, lamb=1e-10, corr=0, noise=0):
+
+    returns = {}
+
+    returns |= solve_kappa_gamma([alpha], epsilon, lamb, corr, noise)
+
+    return returns
+
 
 def SVR_exp(fns, alpha, manifold, epsilon=0, lamb=1e-10, num_trials=1):
 
@@ -316,88 +324,6 @@ def SVR_exp(fns, alpha, manifold, epsilon=0, lamb=1e-10, num_trials=1):
         returns |= linear_problem(fn, manifold, **kwargs)
 
     return returns
-
-
-def SVR_th(alpha, epsilon=0, lamb=1e-10, corr=0, noise=0):
-
-    returns = {}
-
-    returns |= solve_kappa_gamma([alpha], epsilon, lamb, corr, noise)
-
-    return returns
-
-
-def run_simulation(cfg, override=False, SVR_th=SVR_th, suffix="", Manifold=GaussianToyManifold, verbose=True):
-
-    manifold_kwargs = cfg.manifold_kwargs
-    exp_kwargs = cfg.exp_kwargs
-
-    lamb = exp_kwargs.lamb
-    # num_trials = exp_kwargs.num_trials
-
-    alpha_list = np.arange(0.1, 3, 0.1)
-    alpha_list_th = np.linspace(alpha_list[0], alpha_list[-1], 100)
-
-    epsilon_list = np.linspace(0, 1.2, exp_kwargs.grid_size)
-    corr_list = np.linspace(0, 1, exp_kwargs.grid_size)
-    noise_list = [0]
-    if Manifold == GaussianToyManifoldStructered:
-        noise_list = np.linspace(1e-5, 1., exp_kwargs.grid_size)
-
-    exp_params = {'alpha_list': alpha_list,
-                  'alpha_list_th': alpha_list_th,
-                  'epsilon_list': epsilon_list,
-                  'noise_list': noise_list,
-                  'corr_list': corr_list}
-    exp_params |= dict(manifold_kwargs.items() | exp_kwargs.items())
-
-    results_dir = './results'
-    file_name = exp_kwargs.file_name
-
-    os.makedirs(results_dir, exist_ok=True)
-    file_name = os.path.join(results_dir, file_name)
-
-    if os.path.isfile(file_name) and not override:
-        data = np.load(file_name, allow_pickle=True)
-        exp_params = data['exp_params'].tolist()
-        exp_params['file_name'] = file_name
-
-        all_results_exp = data['all_results_exp'].tolist()
-        all_results_th = data['all_results_th'].tolist()
-
-    else:
-        all_results_exp = None
-        all_results_th = None
-
-        for i, corr in enumerate(corr_list):
-
-            for j, noise in enumerate(noise_list):
-
-                for k, epsilon in enumerate(epsilon_list):
-                    if verbose:
-                        print(f"corr: {corr:.2f}, eps: {epsilon:.2f}, noise: {noise:.2f}")
-
-                    # Theory Loop
-                    for n, alpha in enumerate(alpha_list_th):
-
-                        scores = SVR_th(alpha, epsilon=epsilon, lamb=lamb, corr=corr, noise=noise)
-
-                        if all_results_th is None:
-                            all_results_th = {key: np.zeros((len(corr_list),
-                                                             len(noise_list),
-                                                             len(epsilon_list),
-                                                             len(alpha_list_th))) for key in scores.keys()}
-
-                        for key, val in scores.items():
-                            all_results_th[key][i, j, k, n] = val
-
-        exp_params['file_name'] = file_name
-        np.savez(file_name,
-                 exp_params=exp_params,
-                 all_results_exp=all_results_exp,
-                 all_results_th=all_results_th)
-
-    return exp_params, all_results_exp, all_results_th
 
 
 def run_experiment(fns, cfg, override=False, SVR_th=SVR_th, SVR_exp=SVR_exp, Manifold=GaussianToyManifold, suffix=""):
@@ -480,6 +406,79 @@ def run_experiment(fns, cfg, override=False, SVR_th=SVR_th, SVR_exp=SVR_exp, Man
 
                         for key, val in scores.items():
                             all_results_exp[key][i, j, k, n] = val
+
+        exp_params['file_name'] = file_name
+        np.savez(file_name,
+                 exp_params=exp_params,
+                 all_results_exp=all_results_exp,
+                 all_results_th=all_results_th)
+
+    return exp_params, all_results_exp, all_results_th
+
+
+def run_simulation(cfg, override=False, SVR_th=SVR_th, suffix="", Manifold=GaussianToyManifold, verbose=True):
+
+    manifold_kwargs = cfg.manifold_kwargs
+    exp_kwargs = cfg.exp_kwargs
+
+    lamb = exp_kwargs.lamb
+    # num_trials = exp_kwargs.num_trials
+
+    alpha_list = np.arange(0.1, 3, 0.1)
+    alpha_list_th = np.linspace(alpha_list[0], alpha_list[-1], 100)
+
+    epsilon_list = np.linspace(0, 1.2, exp_kwargs.grid_size)
+    corr_list = np.linspace(0, 1, exp_kwargs.grid_size)
+    noise_list = [0]
+    if Manifold == GaussianToyManifoldStructered:
+        noise_list = np.linspace(1e-5, 1., exp_kwargs.grid_size)
+
+    exp_params = {'alpha_list': alpha_list,
+                  'alpha_list_th': alpha_list_th,
+                  'epsilon_list': epsilon_list,
+                  'noise_list': noise_list,
+                  'corr_list': corr_list}
+    exp_params |= dict(manifold_kwargs.items() | exp_kwargs.items())
+
+    results_dir = './results'
+    file_name = exp_kwargs.file_name
+
+    os.makedirs(results_dir, exist_ok=True)
+    file_name = os.path.join(results_dir, file_name)
+
+    if os.path.isfile(file_name) and not override:
+        data = np.load(file_name, allow_pickle=True)
+        exp_params = data['exp_params'].tolist()
+        exp_params['file_name'] = file_name
+
+        all_results_exp = data['all_results_exp'].tolist()
+        all_results_th = data['all_results_th'].tolist()
+
+    else:
+        all_results_exp = None
+        all_results_th = None
+
+        for i, corr in enumerate(corr_list):
+
+            for j, noise in enumerate(noise_list):
+
+                for k, epsilon in enumerate(epsilon_list):
+                    if verbose:
+                        print(f"corr: {corr:.2f}, eps: {epsilon:.2f}, noise: {noise:.2f}")
+
+                    # Theory Loop
+                    for n, alpha in enumerate(alpha_list_th):
+
+                        scores = SVR_th(alpha, epsilon=epsilon, lamb=lamb, corr=corr, noise=noise)
+
+                        if all_results_th is None:
+                            all_results_th = {key: np.zeros((len(corr_list),
+                                                             len(noise_list),
+                                                             len(epsilon_list),
+                                                             len(alpha_list_th))) for key in scores.keys()}
+
+                        for key, val in scores.items():
+                            all_results_th[key][i, j, k, n] = val
 
         exp_params['file_name'] = file_name
         np.savez(file_name,

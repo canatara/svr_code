@@ -2,5 +2,8 @@ ceph
 datasets
 __pycache__
 .DS_Store
-/results/all_data_toy_new_P_800_N_25_grid_20_centroid_seed_42.npz
-/results/combined_data_grating_dataset.npz
+/results_original/all_data_toy_new_*
+/results_original/combined_data_grating_dataset.npz
+/results/
+*.npz
+/old

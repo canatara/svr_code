@@ -142,7 +142,6 @@ def SVR_exp(fns, alpha, manifold, epsilon=0, lamb=1e-10, num_trials=1):
 
         elif fn.__name__ == "linsvr2":
             kwargs['lamb'] = 2*lamb/p_tr
-            # print('lamb,eps,alpha', kwargs['lamb'], epsilon, alpha)
 
         elif "linreg" in fn.__name__:
             kwargs['lamb'] = lamb
@@ -163,6 +162,7 @@ def run_experiment(manifold,
                    fn_list=['linsvr_jax'],
                    epsilon_list=None,
                    alpha_list=None,
+                   lamb=1e-18,
                    suffix="",
                    **kwargs):
 
@@ -177,7 +177,6 @@ def run_experiment(manifold,
         alpha_list = np.array(alpha_list)
 
     alpha_list_th = np.linspace(alpha_list[0], alpha_list[-1], 100)
-    lamb = 1e-18
     fn_list = fn_list
 
     fns = [getattr(linear_problems, fn) for fn in fn_list]
@@ -265,13 +264,14 @@ def experiment_toy(P=800,
                    grid_size=4,
                    num_trials=20,
                    overwrite=False,
-                   SVR_th=SVR_th,
-                   fn_list=[],
                    plot_fig=False,
+                   SVR_th=SVR_th,
                    corr_list=None,
                    noise_list=None,
                    epsilon_list=None,
-                   alpha_list=None):
+                   alpha_list=None,
+                   lamb=None,
+                   fn_list=None):
 
     import os
     import os.path
@@ -284,12 +284,30 @@ def experiment_toy(P=800,
         epsilon_list = np.array([-1, -2, 0.5, 0])
     if alpha_list is None:
         alpha_list = np.arange(0.1, 5, 0.3)
+    if lamb is None:
+        lamb = 1e-18
+    if fn_list is None:
+        fn_list = []
+        
+    exp_params = {'alpha_list': alpha_list,
+                  'epsilon_list': epsilon_list,
+                  'noise_list': noise_list,
+                  'corr_list': corr_list,
+                  'P': P,
+                  'N': N,
+                  'grid_size': grid_size,
+                  'centroid_seed': centroid_seed,
+                  'lamb': lamb,
+                  'fn_list': fn_list,
+                  'num_trials': num_trials,
+                  }
 
     for corr in corr_list:
         for noise in noise_list:
 
-            filename = f'corr_{corr:.3f}_noise_{noise:.3f}_P_{P}_N_{N}'\
-                f'_grid_{grid_size}_centroid_seed_{centroid_seed}.npz'
+            filename = f'corr_{corr:.3f}_noise_{noise:.3f}_P_{P}_N_{N}_grid_{grid_size}'\
+                f'_centroid_seed_{centroid_seed}_lamb_{lamb:.1e}_fn_{str(fn_list)}.npz'
+                
             if SVR_th.__name__ == 'SVR_th':
                 filename = 'cov_th_' + filename
             if os.path.exists('./ceph/temp/'+filename) and not overwrite:
@@ -302,6 +320,7 @@ def experiment_toy(P=800,
                                          fn_list=fn_list,
                                          epsilon_list=epsilon_list,
                                          alpha_list=alpha_list,
+                                         lamb=lamb,
                                          debug=False)
 
                 np.savez('./ceph/temp/'+filename, returns=returns)
@@ -342,10 +361,10 @@ def experiment_toy(P=800,
                 plt.ylabel(r'$E_g$', fontsize=font_axis_label)
                 plt.legend()
 
-                print(filename)
-                if filename == 'corr_0.700_noise_1.000_P_800_N_25_grid_4_centroid_seed_42.npz':
-                    plt.tight_layout()
-                    plt.savefig('optimal_learning_curves.pdf')
+                # print(filename)
+                # if filename == 'corr_0.700_noise_1.000_P_800_N_25_grid_4_centroid_seed_42.npz':
+                #     plt.tight_layout()
+                #     plt.savefig('optimal_learning_curves.pdf')
 
                 plt.show()
 
@@ -357,8 +376,8 @@ def experiment_toy(P=800,
 
         for noise in noise_list:
 
-            filename = f'corr_{corr:.3f}_noise_{noise:.3f}_P_{P}_N_{N}'\
-                f'_grid_{grid_size}_centroid_seed_{centroid_seed}.npz'
+            filename = f'corr_{corr:.3f}_noise_{noise:.3f}_P_{P}_N_{N}_grid_{grid_size}'\
+                f'_centroid_seed_{centroid_seed}_lamb_{lamb:.1e}_fn_{str(fn_list)}.npz'
             if SVR_th.__name__ == 'SVR_th':
                 filename = 'cov_th_' + filename
 
@@ -368,17 +387,18 @@ def experiment_toy(P=800,
                 all_results_th = returns.pop('all_results_th')
                 all_results_exp = returns.pop('all_results_exp')
 
-                data[corr][noise] = all_results_th | returns
+                data[corr][noise] = all_results_th | all_results_exp | returns
 
             else:
                 print('./ceph/temp/'+filename, + ' does not exist')
                 pass
 
-    alldata_file = f'all_data_toy_new_P_{P}_N_{N}'\
-        f'_grid_{grid_size}_centroid_seed_{centroid_seed}.npz'
+    alldata_file = f'all_data_toy_new_P_{P}_N_{N}_grid_{grid_size}'\
+    f'_centroid_seed_{centroid_seed}_lamb_{lamb:.1e}_fn_{str(fn_list)}.npz'
     if SVR_th.__name__ == 'SVR_th':
         alldata_file = 'cov_th_' + alldata_file
 
+    data['exp_params'] = exp_params
     np.savez('./results/' + alldata_file, data=data)
 
     return data
