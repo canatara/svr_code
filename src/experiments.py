@@ -288,7 +288,7 @@ def experiment_toy(P=800,
         lamb = 1e-18
     if fn_list is None:
         fn_list = []
-        
+
     exp_params = {'alpha_list': alpha_list,
                   'epsilon_list': epsilon_list,
                   'noise_list': noise_list,
@@ -307,7 +307,7 @@ def experiment_toy(P=800,
 
             filename = f'corr_{corr:.3f}_noise_{noise:.3f}_P_{P}_N_{N}_grid_{grid_size}'\
                 f'_centroid_seed_{centroid_seed}_lamb_{lamb:.1e}_fn_{str(fn_list)}.npz'
-                
+
             if SVR_th.__name__ == 'SVR_th':
                 filename = 'cov_th_' + filename
             if os.path.exists('./ceph/temp/'+filename) and not overwrite:
@@ -394,7 +394,7 @@ def experiment_toy(P=800,
                 pass
 
     alldata_file = f'all_data_toy_new_P_{P}_N_{N}_grid_{grid_size}'\
-    f'_centroid_seed_{centroid_seed}_lamb_{lamb:.1e}_fn_{str(fn_list)}.npz'
+        f'_centroid_seed_{centroid_seed}_lamb_{lamb:.1e}_fn_{str(fn_list)}.npz'
     if SVR_th.__name__ == 'SVR_th':
         alldata_file = 'cov_th_' + alldata_file
 
