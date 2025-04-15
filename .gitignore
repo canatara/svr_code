@@ -2,8 +2,6 @@ ceph
 datasets
 __pycache__
 .DS_Store
-/results_original/all_data_toy_new_*
-/results_original/combined_data_grating_dataset.npz
-/results/
 *.npz
 /old
+/results_original
