@@ -1,0 +1,36 @@
+[project]
+name = "svr-code"
+version = "0.1.0"
+description = "Code to reproduce the figures in 'Statistical Mechanics of Support Vector Regression' (Canatar & Chung, Phys. Rev. E 112, 025301, 2025)."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Abdulkadir Canatar" },
+    { name = "SueYeon Chung" },
+]
+
+dependencies = [
+    # scientific core
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "scikit-learn",
+    "opencv-python",
+    # JAX + solvers (self-consistent saddle-point equations, QP-based SVR)
+    "jax",
+    "jaxopt",
+    "optimistix",
+    # deep-learning feature extractors (CNNs / ResNets, MNIST)
+    "torch",
+    "torchvision",
+    "timm",
+    # notebook workflow
+    "ipykernel",
+    "jupyterlab",
+]
+
+[tool.uv]
+# This repo is a set of notebooks plus a `src/` namespace directory imported
+# from the repo root — not an installable package. Have uv manage only the
+# environment/dependencies rather than trying to build the project itself.
+package = false
